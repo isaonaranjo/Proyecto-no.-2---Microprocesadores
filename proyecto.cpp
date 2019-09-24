@@ -144,8 +144,15 @@ string TextToBinaryString (string text){
 //TODO: Función de generación de llaves.
 
 //TODO: Función de permutación inicial/final.
+string permutacion(string k, int* arr, int n){ 
+	string permut=""; 
+	for(int i=0; i<n ; i++){ 
+		permut+= k[arr[i]-1]; 
+	} 
+	return permut; 
+}
 
-
+// Funcion XOR
 char * xorBINARY(char * first, char * second, int len){
   char * res = new char[len];
   for(int i=0;i<len;i++){
