@@ -143,13 +143,24 @@ string TextToBinaryString (string text){
 
 //TODO: Función de generación de llaves.
 
-//TODO: Función de permutación inicial/final.
-string permutacion(string k, int* arr, int n){ 
-	string permut=""; 
-	for(int i=0; i<n ; i++){ 
-		permut+= k[arr[i]-1]; 
+//Función de permutación inicial.
+void permutation(char* arr){
+	char temp[64];
+    
+	for(int i=0; i<64 ; i++){
+		temp[i] = arr[table_ip[i]-1];
 	} 
-	return permut; 
+    memcpy(arr, temp, 64);
+}
+
+//Función de permutación final.
+void permutation_inverse(char* arr){
+    char temp[64];
+    
+    for(int i=0; i<64 ; i++){
+        temp[i] = arr[table_ip_reverse[i]-1];
+    }
+    memcpy(arr, temp, 64);
 }
 
 // Funcion XOR
@@ -161,12 +172,91 @@ char * xorBINARY(char * first, char * second, int len){
   return res;
 }
 
-void swapLeftAndRight(char * binaryBlock, int bits){
+//Funcion que transforma de 32 a 48 bits para poder operar con llave.
+char* E(char* arr){
+    char* res = new char[48];
+    for(int i=0; i<48; i++){
+        res[i] = arr[table_e[i]-1]
+    }
+}
+
+//Función S que se encarga de convertir de 48 a 32 bits con las tablas.
+char* S(char* arr){
+    char* res = new char[32];
+    int j = 0;
+    int k = 0;
+    
+    for (int i=0; i<48; i+=6){
+        int row = 2*arr[i] = arr[i+5];
+        int column = 8*arr[i+1] + 4*arr[i+2] + 2*arr[i+3] + arr[i+4];
+        
+        int val = table_s[j][row][column];
+        j++;
+        
+        for (int x=8; x>0; x>>= 1){
+            res[k] = ((value & x) == x) ? 1:0;
+            k++;
+        }
+    }
+    return res;
+}
+
+char* P (char* sRes){
+    char* res = new char[32];
+    
+    for (int i=0; i<32; i++){
+        res[i] = sRes[table_p[i] - 1]
+    }
+    
+    return res;
+}
+
+//Función entre R y llave K.
+char* F(char* R, char* K){
+    char* resE = E(R);
+    char* resXOR = xorBINARY(resE, K, 48);
+    char* resS = S(resXOR);
+    char* resP = P(resS);
+    
+    return resP;
+}
+
+void iterate(char * binaryBlock , char * subKey){
+    char L_OLD[32];
+    char R_OLD[32];
+    
+    memcpy(L_OLD,binaryBlock,32);
+    memcpy(R_OLD,&binaryBlock[32],32);
+    
+    //Aplicar función F con Ri-1 y llave Ki
+    char* resF = F(R_OLD,subKey);
+    //TODO: Revisar si esta parte es necesaria***
+    char* R_NEW = xorBINARY(L_OLD,resF,32);
+    
+    // Cambiar orden entre R y L.
+    memcpy(binaryBlock,R_OLD,32);
+    memcpy(&binaryBlock[32],R_NEW,32);
+}
+
+//Función que se encarga de cambiar el orden de R y L entre cada ronda Feistel.
+void swap(char * arr, int bits){
   int halfLen = bits/2;
   char temp[halfLen];
-  memcpy(temp,binaryBlock,halfLen);
-  memcpy(binaryBlock,&binaryBlock[halfLen],halfLen);
-  memcpy(&binaryBlock[halfLen],temp,halfLen);
+  memcpy(temp, arr, halfLen);
+  memcpy(binaryBlock, &arr[halfLen], alfLen);
+  memcpy(&arr[halfLen], temp, halfLen);
+}
+
+void PC_1(char* arr, char* C0D0){
+    for(int i=0; i<56; i++){
+        C0D0[i] = arr[table_pc_1[i]-1]
+    }
+}
+
+void PC_2(char* CiDi, char* keys){
+    for(int i=0; i<48; i++){
+        keys[i] = CiDi[table_pc_2[i]-1]
+    }
 }
 
 void LS(char * CiDi,int round){
@@ -214,5 +304,10 @@ void LS(char * CiDi,int round){
 int main(){
     string myString = "Hello World";
     
-    cout << "BINARIO: " << TextToBinaryString(myString) << endl;
+    //Obtener cada char en un string.
+    for (int i = 0; i < myString.length(); i++){
+        cout << myString.at(i) << endl;
+    }
+    
+    cout << "BINARIO: " << TextToBinaryString(myString).length() << endl;
 }
