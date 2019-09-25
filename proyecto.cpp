@@ -301,6 +301,69 @@ void LS(char * CiDi,int round){
   }
 }
 
+// Función encriptación
+void encryptDES(char * plainTextHexString, char * keyHexString){
+
+  //--------------------------------------------------------
+  //SETUP PROCESS
+
+  printf("------------------------------------------------\n");
+  printf("SETUP Process\n\n");
+
+  //setup plaintext block
+  char plainTextBlock[8];
+  unsigned long plainTextHexValue = std::strtoul(plainTextHexString, 0, 16);
+  memcpy(plainTextBlock,&plainTextHexValue,8);
+  std::reverse(plainTextBlock, plainTextBlock+8);
+
+  //setup key
+  char key[8];
+  unsigned long keyHexValue = std::strtoul(keyHexString, 0, 16);
+  memcpy(key,&keyHexValue,8);
+  std::reverse(key, key+8);
+
+  char ptbBinary[64]; //plain text block binary
+  char keyBinary[64]; //key in binary
+  byteBlockToBinary(plainTextBlock,ptbBinary);
+  byteBlockToBinary(key,keyBinary);
+  printf("PLAIN TEXT (in binary):\n");
+  printBinary(ptbBinary,64);
+  printf("KEY (in binary):\n");
+  printBinary(keyBinary,64);
+  printf("\n");
+
+
+  //--------------------------------------------------------
+  //GENERATE ALL SUBKEYS
+
+  printf("------------------------------------------------\n");
+  printf("SUBKEYS Generation Process\n\n");
+
+  char subkeysBinary[16][48];
+
+  char CiDi[56];
+
+  PC_1(keyBinary,CiDi);
+  //C0D0
+  printf("C0D0\n");
+  printBinary(CiDi,56);
+  printf("\n");
+  for(int round=1;round<=16;round++){
+    printf("K%d:\n",round);
+    LS(CiDi,round);
+    PC_2(CiDi,subkeysBinary[round-1]);
+    printf("In Binary:\n");
+    printBinary(subkeysBinary[round-1],48);
+    printf("In Hex(6 hex digit):\n");
+    printBinaryAsHex(subkeysBinary[round-1],48);
+    printf("In Hex(8 hex digit - 6 bits data per byte):\n");
+    printKeyBinaryAsHex(subkeysBinary[round-1]);
+    printf("\n");
+  }
+  printf("\n");
+
+}
+
 int main(){
     string myString = "Hello World";
     
