@@ -133,6 +133,73 @@ char table_p[] = {
     22,11,4,25
 };
 
+//Función para convertir de Hex a Bin.
+string HexToBin(string hexdec)
+{
+    long int i = 0;
+    string binString = "";
+    
+    while (hexdec[i]) {
+        
+        switch (hexdec[i]) {
+            case '0':
+                binString += "0000";
+                break;
+            case '1':
+                binString += "0001";
+                break;
+            case '2':
+                binString += "0010";
+                break;
+            case '3':
+                binString += "0011";
+                break;
+            case '4':
+                binString += "0100";
+                break;
+            case '5':
+                binString += "0101";
+                break;
+            case '6':
+                binString += "0110";
+                break;
+            case '7':
+                binString += "0111";
+                break;
+            case '8':
+                binString += "1000";
+                break;
+            case '9':
+                binString += "1001";
+                break;
+            case 'A':
+            case 'a':
+                binString += "1010";
+                break;
+            case 'B':
+                binString += "1011";
+                break;
+            case 'C':
+                binString += "1100";
+                break;
+            case 'D':
+                binString += "1101";
+                break;
+            case 'E':
+                binString += "1110";
+                break;
+            case 'F':
+                binString += "1111";
+                break;
+            default:
+                cout << "\nInvalid hexadecimal digit "
+                << hexdec[i];
+        }
+        i++;
+    }
+    return binString;
+}
+
 //Función para convertir el texto a un string a bits.
 string TextToBinaryString (string text){
     string binaryString = "";
@@ -372,6 +439,12 @@ int main(){
     printf("Ingrese la llave DES (16 dígitos HEX): \n");
     scanf("%16s", keyHEX);
     
+    //Pasar la llave a mayúsculas todo a mayúsculas.
+    for (auto & c: keyHEX) c = toupper(c);
+    printf("keyHEX: %s\n", keyHEX);
+    
+    cout<< "keyHEX en binario: " << HexToBin(keyHEX) << endl;
+    
     //Calcular número de veces que se tendrá que usar el algoritmo dependiendo del largo del texto.
     int des_num = (TextToBinaryString(plainText).length())%8;
     
@@ -381,12 +454,12 @@ int main(){
     
     string binary = TextToBinaryString(plainText);
     
-    char binaryStrings[des_num][64];
+    char plainTextBinary[des_num][64];
     
     //Obtener cada char en un string.
     for (int i = 0; i < des_num; i++){
         for (int j =0; j<64; j++){
-            binaryStrings[i][j] = binary.at(64*i + j);
+            plainTextBinary[i][j] = binary.at(64*i + j);
         }
     }
     
