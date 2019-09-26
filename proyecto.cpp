@@ -383,14 +383,19 @@ int main(){
     
     //Pedir ingreso de texto (string).
     printf("Ingrese el texto que desea encriptar: \n");
-    getline(cin, str);
+    getline(cin, plainText);
     
     //Pedir ingreso de llave.
     printf("Ingrese la llave DES (16 dígitos HEX): \n");
     scanf("%16s", keyHEX);
     
     //Calcular número de veces que se tendrá que usar el algoritmo dependiendo del largo del texto.
-    int des_num = (TextToBinaryString(plainText).length)/64;
+    int des_num = (TextToBinaryString(plainText).length())%8;
+    
+    while ((plainText.length()%8) != 0){
+        plainText += " ";
+    }
+    
     string binary = TextToBinaryString(plainText);
     
     char binaryStrings[des_num][64];
