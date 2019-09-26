@@ -243,6 +243,61 @@ void permutation_inverse(char* arr){
     memcpy(arr, temp, 64);
 }
 
+const char *byte_to_binary(int x)
+{
+    static char b[9];
+    b[0] = '\0';
+
+    int z;
+    for (z = 128; z > 0; z >>= 1){
+      strcat(b, ((x & z) == z) ? "1" : "0");
+    }
+
+    return b;
+}
+
+void byteBlockToBinary(char * byteBlock, char * res) {
+  int j = 0;
+  for(int i=0;i<8;i++){
+    int byte = byteBlock[i];
+    for(int x = 128; x>0; x>>= 1){
+      //res[j] = ((byte & x) == x) ? '1':'0';
+      res[j] = ((byte & x) == x) ? 1:0;
+      j++;
+    }
+
+  }
+}
+
+void printBinary(char * binary, int bit) {
+  for(int i =0;i<bit;i++){
+    printf("%c", binary[i] ? '1':'0');
+  }
+  printf("\n");
+}
+
+void printBinaryAsHex(char * binary, int bit) {
+
+  int val = 0;
+  for(int i =0;i<bit;i=i+8){
+    val = 128*binary[i] + 64*binary[i+1] + 32*binary[i+2] + 16*binary[i+3] + 8*binary[i+4] + 4*binary[i+5] + 2*binary[i+6] + binary[i+7];
+    printf("%02x",val);
+
+  }
+  printf("\n");
+}
+
+void printKeyBinaryAsHex(char * binary) {
+
+  int val = 0;
+  for(int i =0;i<48;i=i+6){
+    val = 32*binary[i] + 16*binary[i+1] + 8*binary[i+2] + 4*binary[i+3] + 2*binary[i+4] + binary[i+5];
+    printf("%02x",val);
+
+  }
+  printf("\n");
+}
+
 // Funcion XOR
 char * xorBINARY(char * first, char * second, int len){
   char * res = new char[len];
@@ -382,9 +437,9 @@ void LS(char * CiDi,int round){
 }
 
 // Función encriptación
-void encryptDES(char * plainTextHexString, char * keyHexString){
+void encryptDES(string * plainTextHexString, char * keyHexString){
 
-  //--------------------------------------------------------
+//--------------------------------------------------------
   //SETUP PROCESS
 
   printf("------------------------------------------------\n");
@@ -404,6 +459,14 @@ void encryptDES(char * plainTextHexString, char * keyHexString){
 
   char ptbBinary[64]; //plain text block binary
   char keyBinary[64]; //key in binary
+  byteBlockToBinary(plainTextBlock,ptbBinary);
+  byteBlockToBinary(key,keyBinary);
+  printf("PLAIN TEXT (in binary):\n");
+  printBinary(ptbBinary,64);
+  printf("KEY (in binary):\n");
+  printBinary(keyBinary,64);
+  printf("\n");
+
 
   //--------------------------------------------------------
   //GENERATE ALL SUBKEYS
@@ -416,22 +479,30 @@ void encryptDES(char * plainTextHexString, char * keyHexString){
   char CiDi[56];
 
   PC_1(keyBinary,CiDi);
+  //C0D0
+  printf("C0D0\n");
+  printBinary(CiDi,56);
+  printf("\n");
   for(int round=1;round<=16;round++){
     printf("K%d:\n",round);
     LS(CiDi,round);
     PC_2(CiDi,subkeysBinary[round-1]);
-
+    printf("In Binary:\n");
+    printBinary(subkeysBinary[round-1],48);
+    printf("In Hex(6 hex digit):\n");
+    printBinaryAsHex(subkeysBinary[round-1],48);
+    printf("In Hex(8 hex digit - 6 bits data per byte):\n");
+    printKeyBinaryAsHex(subkeysBinary[round-1]);
     printf("\n");
   }
   printf("\n");
-
 }
 
 int main(){
     string plainText;
     char keyHEX[17];
     
-    //Pedir ingreso de texto (string).
+    //Pedir ingreso de texto
     printf("Ingrese el texto que desea encriptar: \n");
     getline(cin, plainText);
     
@@ -462,5 +533,9 @@ int main(){
             plainTextBinary[i][j] = binary.at(64*i + j);
         }
     }
+    
+    // Texto encriptado 
+    encryptDES(plainText,keyHEX);
+    return 0;
     
 }
