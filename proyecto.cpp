@@ -9,7 +9,7 @@
 #include <iostream>
 #include <pthread.h>
 #include <sstream>
-
+//0123456789999999
 using namespace std;
 
 //Permutación inicial.
@@ -300,9 +300,9 @@ void printKeyBinaryAsHex(char * binary) {
 
 // Funcion XOR
 char * xorBINARY(char * first, char * second, int len){
-  char * res = new char[len];
-  for(int i=0;i<len;i++){
-    res[i] = first[i]^second[i];
+    char * res = new char[len];
+  for(int i=0; i<len; i++){
+    res[i] = ((first[i] - '0') ^ (second[i]-'0'));
   }
   return res;
 }
@@ -349,28 +349,54 @@ char* P (char* sRes){
 //Función entre R y llave K.
 char* F(char* R, char* K){
     char* resE = E(R);
+    cout << "Obtuvo resE" << endl;
     char* resXOR = xorBINARY(resE, K, 48);
+    cout << "Obtuvo resXOR" << endl;
     char* resS = S(resXOR);
+    cout << "Obtuvo resS" << endl;
     char* resP = P(resS);
+    cout << "Obtuvo resP" << endl;
     
     return resP;
 }
 
 void iterate(char * binaryBlock , char * subKey){
+    
+    cout << "Entró a iterate" << endl;
+
     char L_OLD[32];
     char R_OLD[32];
+    
+    cout << binaryBlock << endl;
+    
+    
+  //  for (int i=0; i<32; i++){
+   //     L_OLD[i] = binaryBlock[i];
+    //    R_OLD[i] = binaryBlock[i+32];
+   // }
     
     memcpy(L_OLD,binaryBlock,32);
     memcpy(R_OLD,&binaryBlock[32],32);
     
+    cout << "Copio L_OLD y R_OLD" << endl;
+    
     //Aplicar función F con Ri-1 y llave Ki
     char* resF = F(R_OLD,subKey);
+
+    
+    cout << "Obtuvo resF" << endl;
     //TODO: Revisar si esta parte es necesaria***
     char* R_NEW = xorBINARY(L_OLD,resF,32);
+    
+    cout << "Obtuvo R_NEW" << endl;
     
     // Cambiar orden entre R y L.
     memcpy(binaryBlock,R_OLD,32);
     memcpy(&binaryBlock[32],R_NEW,32);
+    
+    cout << "Hizo cambio de orden entre R y L." << endl;
+    
+    
 }
 
 //Función que se encarga de cambiar el orden de R y L entre cada ronda Feistel.
@@ -437,65 +463,62 @@ void LS(char * CiDi,int round){
 }
 
 // Función encriptación
-void encryptDES(string * plainTextHexString, char * keyHexString){
+void encryptDES(char* plainTextBinString, char* keyHexString){
+    
+    string binKey = HexToBin(keyHexString);
+    
+    char ptbBinary[64]; //plain text block binary
+    char keyBinary[64]; //key in binary
 
-//--------------------------------------------------------
-  //SETUP PROCESS
-
-  printf("------------------------------------------------\n");
-  printf("SETUP Process\n\n");
-
-  //setup plaintext block
-  char plainTextBlock[8];
-  unsigned long plainTextHexValue = std::strtoul(plainTextHexString, 0, 16);
-  memcpy(plainTextBlock,&plainTextHexValue,8);
-  std::reverse(plainTextBlock, plainTextBlock+8);
-
-  //setup key
-  char key[8];
-  unsigned long keyHexValue = std::strtoul(keyHexString, 0, 16);
-  memcpy(key,&keyHexValue,8);
-  std::reverse(key, key+8);
-
-  char ptbBinary[64]; //plain text block binary
-  char keyBinary[64]; //key in binary
-  byteBlockToBinary(plainTextBlock,ptbBinary);
-  byteBlockToBinary(key,keyBinary);
-  printf("PLAIN TEXT (in binary):\n");
-  printBinary(ptbBinary,64);
-  printf("KEY (in binary):\n");
-  printBinary(keyBinary,64);
-  printf("\n");
+    //Copiar el bloque de bits del texto a variable ptbBinary.
+    memcpy(ptbBinary, plainTextBinString,64);
+    
+    //Pasar al arreglo de bits de la llave.
+    for (int i=0; i<64; i++){
+        keyBinary[i] = binKey.at(i);
+    }
 
 
-  //--------------------------------------------------------
-  //GENERATE ALL SUBKEYS
+      //--------------------------------------------------------
+      //Generación de subllaves.
 
-  printf("------------------------------------------------\n");
-  printf("SUBKEYS Generation Process\n\n");
+      printf("------------------------------------------------\n");
+      printf("SUBKEYS Generation Process\n\n");
 
-  char subkeysBinary[16][48];
+      char subkeysBinary[16][48];
 
-  char CiDi[56];
+      char CiDi[56];
 
-  PC_1(keyBinary,CiDi);
-  //C0D0
-  printf("C0D0\n");
-  printBinary(CiDi,56);
-  printf("\n");
-  for(int round=1;round<=16;round++){
-    printf("K%d:\n",round);
-    LS(CiDi,round);
-    PC_2(CiDi,subkeysBinary[round-1]);
-    printf("In Binary:\n");
-    printBinary(subkeysBinary[round-1],48);
-    printf("In Hex(6 hex digit):\n");
-    printBinaryAsHex(subkeysBinary[round-1],48);
-    printf("In Hex(8 hex digit - 6 bits data per byte):\n");
-    printKeyBinaryAsHex(subkeysBinary[round-1]);
-    printf("\n");
-  }
-  printf("\n");
+      PC_1(keyBinary,CiDi);
+
+      for(int round=1;round<=16;round++){
+        printf("K%d:\n",round);
+          
+        cout << "LS" << endl;
+        LS(CiDi,round);
+          
+        cout << "PC_2" << endl;
+        PC_2(CiDi,subkeysBinary[round-1]);
+      }
+    
+    //----------------------------------------------------------
+    //Encriptación
+    cout << "permutación" << endl;
+    permutation(ptbBinary);
+    
+    for (int round=1; round <=16; round++){
+        printf("Round %d: \n", round);
+        
+        cout << "Interate" << endl;
+        iterate (ptbBinary, subkeysBinary[round-1]);
+    }
+    
+    cout << "swap" << endl;
+    swap(ptbBinary,64);
+    
+    cout << "permutacion inversa" << endl;
+    permutation_inverse(ptbBinary);
+    
 }
 
 int main(){
@@ -517,7 +540,7 @@ int main(){
     cout<< "keyHEX en binario: " << HexToBin(keyHEX) << endl;
     
     //Calcular número de veces que se tendrá que usar el algoritmo dependiendo del largo del texto.
-    int des_num = (TextToBinaryString(plainText).length())%8;
+    int des_num = (plainText.length() + 8 - 1)/8;
     
     while ((plainText.length()%8) != 0){
         plainText += " ";
@@ -525,7 +548,10 @@ int main(){
     
     string binary = TextToBinaryString(plainText);
     
+    cout << des_num << endl;
+    
     char plainTextBinary[des_num][64];
+    char keyBinString[64];
     
     //Obtener cada char en un string.
     for (int i = 0; i < des_num; i++){
@@ -535,7 +561,16 @@ int main(){
     }
     
     // Texto encriptado 
-    encryptDES(plainText,keyHEX);
-    return 0;
+    for (int i=0; i<des_num; i++){
+        //encryptDES(plainTextBinary[i]);
+        char block [64];
+        
+        for (int j=0; j<64; j++){
+            block[j] = plainTextBinary[i][j];
+        }
+        encryptDES(block, keyHEX);
+        
+    }
     
+    return 0;
 }
