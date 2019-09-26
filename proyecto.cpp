@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <iostream>
 #include <pthread.h>
+#include <sstream>
 
 using namespace std;
 
@@ -140,6 +141,18 @@ string TextToBinaryString (string text){
     }
     return binaryString;
 }
+//Función para convertir string de bits a texto.
+string BinaryStringToText(string binaryString) {
+    string text = "";
+    stringstream sstream(binaryString);
+    while (sstream.good())
+    {
+        bitset<8> bits;
+        sstream >> bits;
+        text += char(bits.to_ulong());
+    }
+    return text;
+}
 
 //TODO: Función de generación de llaves.
 
@@ -176,7 +189,7 @@ char * xorBINARY(char * first, char * second, int len){
 char* E(char* arr){
     char* res = new char[48];
     for(int i=0; i<48; i++){
-        res[i] = arr[table_e[i]-1]
+        res[i] = arr[table_e[i]-1];
     }
 }
 
@@ -187,14 +200,14 @@ char* S(char* arr){
     int k = 0;
     
     for (int i=0; i<48; i+=6){
-        int row = 2*arr[i] = arr[i+5];
+        int row = 2*arr[i] + arr[i+5];
         int column = 8*arr[i+1] + 4*arr[i+2] + 2*arr[i+3] + arr[i+4];
         
         int val = table_s[j][row][column];
         j++;
         
         for (int x=8; x>0; x>>= 1){
-            res[k] = ((value & x) == x) ? 1:0;
+            res[k] = ((val & x) == x) ? 1:0;
             k++;
         }
     }
@@ -205,7 +218,7 @@ char* P (char* sRes){
     char* res = new char[32];
     
     for (int i=0; i<32; i++){
-        res[i] = sRes[table_p[i] - 1]
+        res[i] = sRes[table_p[i] - 1];
     }
     
     return res;
@@ -243,19 +256,19 @@ void swap(char * arr, int bits){
   int halfLen = bits/2;
   char temp[halfLen];
   memcpy(temp, arr, halfLen);
-  memcpy(binaryBlock, &arr[halfLen], alfLen);
+  memcpy(arr, &arr[halfLen], halfLen);
   memcpy(&arr[halfLen], temp, halfLen);
 }
 
 void PC_1(char* arr, char* C0D0){
     for(int i=0; i<56; i++){
-        C0D0[i] = arr[table_pc_1[i]-1]
+        C0D0[i] = arr[table_pc_1[i]-1];
     }
 }
 
 void PC_2(char* CiDi, char* keys){
     for(int i=0; i<48; i++){
-        keys[i] = CiDi[table_pc_2[i]-1]
+        keys[i] = CiDi[table_pc_2[i]-1];
     }
 }
 
@@ -324,7 +337,7 @@ void encryptDES(char * plainTextHexString, char * keyHexString){
 
   char ptbBinary[64]; //plain text block binary
   char keyBinary[64]; //key in binary
-  byteBlockToBinary(plainTextBlock,ptbBinary);
+  //byteBlockToBinary(plainTextBlock,ptbBinary);
   byteBlockToBinary(key,keyBinary);
   printf("PLAIN TEXT (in binary):\n");
   printBinary(ptbBinary,64);
@@ -365,12 +378,28 @@ void encryptDES(char * plainTextHexString, char * keyHexString){
 }
 
 int main(){
-    string myString = "Hello World";
+    string plainText;
+    char keyHEX[17];
+    
+    //Pedir ingreso de texto (string).
+    printf("Ingrese el texto que desea encriptar: \n");
+    getline(cin, str);
+    
+    //Pedir ingreso de llave.
+    printf("Ingrese la llave DES (16 dígitos HEX): \n");
+    scanf("%16s", keyHEX);
+    
+    //Calcular número de veces que se tendrá que usar el algoritmo dependiendo del largo del texto.
+    int des_num = (TextToBinaryString(plainText).length)/64;
+    string binary = TextToBinaryString(plainText);
+    
+    char binaryStrings[des_num][64];
     
     //Obtener cada char en un string.
-    for (int i = 0; i < myString.length(); i++){
-        cout << myString.at(i) << endl;
+    for (int i = 0; i < des_num; i++){
+        for (int j =0; j<64; j++){
+            binaryStrings[i][j] = binary.at(64*i + j);
+        }
     }
     
-    cout << "BINARIO: " << TextToBinaryString(myString).length() << endl;
 }
