@@ -99,7 +99,7 @@ char table_pc_1[] = {
     21,13,5,28,20,12,4
 };
 
-char table_pc_2[]{
+char table_pc_2[] = {
     14,17,11,24,1,5,
     3,28,15,6,21,10,
     23,19,12,4,26,8,
@@ -221,203 +221,36 @@ string BinaryStringToText(string binaryString) {
     return text;
 }
 
-//TODO: Función de generación de llaves.
-
-//Función de permutación inicial.
-void permutation(char* arr){
-	char temp[64];
-    
-	for(int i=0; i<64 ; i++){
-		temp[i] = arr[table_ip[i]-1];
-	} 
-    memcpy(arr, temp, 64);
-}
-
-//Función de permutación final.
-void permutation_inverse(char* arr){
-    char temp[64];
-    
-    for(int i=0; i<64 ; i++){
-        temp[i] = arr[table_ip_reverse[i]-1];
+string binArrToBinString (char * binArr, int bits){
+    string res = "";
+    for (int i=0; i<bits; i++){
+        res += binArr[i];
     }
-    memcpy(arr, temp, 64);
-}
-
-const char *byte_to_binary(int x)
-{
-    static char b[9];
-    b[0] = '\0';
-
-    int z;
-    for (z = 128; z > 0; z >>= 1){
-      strcat(b, ((x & z) == z) ? "1" : "0");
-    }
-
-    return b;
-}
-
-void byteBlockToBinary(char * byteBlock, char * res) {
-  int j = 0;
-  for(int i=0;i<8;i++){
-    int byte = byteBlock[i];
-    for(int x = 128; x>0; x>>= 1){
-      //res[j] = ((byte & x) == x) ? '1':'0';
-      res[j] = ((byte & x) == x) ? 1:0;
-      j++;
-    }
-
-  }
+    return res;
 }
 
 void printBinary(char * binary, int bit) {
   for(int i =0;i<bit;i++){
-    printf("%c", binary[i] ? '1':'0');
+    printf("%c", binary[i]);
   }
   printf("\n");
 }
 
-void printBinaryAsHex(char * binary, int bit) {
-
-  int val = 0;
-  for(int i =0;i<bit;i=i+8){
-    val = 128*binary[i] + 64*binary[i+1] + 32*binary[i+2] + 16*binary[i+3] + 8*binary[i+4] + 4*binary[i+5] + 2*binary[i+6] + binary[i+7];
-    printf("%02x",val);
-
-  }
-  printf("\n");
-}
-
-void printKeyBinaryAsHex(char * binary) {
-
-  int val = 0;
-  for(int i =0;i<48;i=i+6){
-    val = 32*binary[i] + 16*binary[i+1] + 8*binary[i+2] + 4*binary[i+3] + 2*binary[i+4] + binary[i+5];
-    printf("%02x",val);
-
-  }
-  printf("\n");
-}
-
-// Funcion XOR
-char * xorBINARY(char * first, char * second, int len){
-    char * res = new char[len];
-  for(int i=0; i<len; i++){
-    res[i] = ((first[i] - '0') ^ (second[i]-'0'));
-  }
-  return res;
-}
-
-//Funcion que transforma de 32 a 48 bits para poder operar con llave.
-char* E(char* arr){
-    char* res = new char[48];
-    for(int i=0; i<48; i++){
-        res[i] = arr[table_e[i]-1];
-    }
-}
-
-//Función S que se encarga de convertir de 48 a 32 bits con las tablas.
-char* S(char* arr){
-    char* res = new char[32];
-    int j = 0;
-    int k = 0;
-    
-    for (int i=0; i<48; i+=6){
-        int row = 2*arr[i] + arr[i+5];
-        int column = 8*arr[i+1] + 4*arr[i+2] + 2*arr[i+3] + arr[i+4];
-        
-        int val = table_s[j][row][column];
-        j++;
-        
-        for (int x=8; x>0; x>>= 1){
-            res[k] = ((val & x) == x) ? 1:0;
-            k++;
-        }
-    }
-    return res;
-}
-
-char* P (char* sRes){
-    char* res = new char[32];
-    
-    for (int i=0; i<32; i++){
-        res[i] = sRes[table_p[i] - 1];
-    }
-    
-    return res;
-}
-
-//Función entre R y llave K.
-char* F(char* R, char* K){
-    char* resE = E(R);
-    cout << "Obtuvo resE" << endl;
-    char* resXOR = xorBINARY(resE, K, 48);
-    cout << "Obtuvo resXOR" << endl;
-    char* resS = S(resXOR);
-    cout << "Obtuvo resS" << endl;
-    char* resP = P(resS);
-    cout << "Obtuvo resP" << endl;
-    
-    return resP;
-}
-
-void iterate(char * binaryBlock , char * subKey){
-    
-    cout << "Entró a iterate" << endl;
-
-    char L_OLD[32];
-    char R_OLD[32];
-    
-    cout << binaryBlock << endl;
-    
-    
-  //  for (int i=0; i<32; i++){
-   //     L_OLD[i] = binaryBlock[i];
-    //    R_OLD[i] = binaryBlock[i+32];
-   // }
-    
-    memcpy(L_OLD,binaryBlock,32);
-    memcpy(R_OLD,&binaryBlock[32],32);
-    
-    cout << "Copio L_OLD y R_OLD" << endl;
-    
-    //Aplicar función F con Ri-1 y llave Ki
-    char* resF = F(R_OLD,subKey);
-
-    
-    cout << "Obtuvo resF" << endl;
-    //TODO: Revisar si esta parte es necesaria***
-    char* R_NEW = xorBINARY(L_OLD,resF,32);
-    
-    cout << "Obtuvo R_NEW" << endl;
-    
-    // Cambiar orden entre R y L.
-    memcpy(binaryBlock,R_OLD,32);
-    memcpy(&binaryBlock[32],R_NEW,32);
-    
-    cout << "Hizo cambio de orden entre R y L." << endl;
-    
-    
-}
-
-//Función que se encarga de cambiar el orden de R y L entre cada ronda Feistel.
-void swap(char * arr, int bits){
-  int halfLen = bits/2;
-  char temp[halfLen];
-  memcpy(temp, arr, halfLen);
-  memcpy(arr, &arr[halfLen], halfLen);
-  memcpy(&arr[halfLen], temp, halfLen);
-}
-
-void PC_1(char* arr, char* C0D0){
+//Aplicar tabla PC_1 para obtener llave de 56 bits.
+void PC_1(char * binBlock, char * C0D0){
     for(int i=0; i<56; i++){
-        C0D0[i] = arr[table_pc_1[i]-1];
+        C0D0[i] = binBlock[table_pc_1[i]-1];
     }
 }
 
-void PC_2(char* CiDi, char* keys){
-    for(int i=0; i<48; i++){
-        keys[i] = CiDi[table_pc_2[i]-1];
-    }
+//Función de permutación inicial.
+void permutation(char * binBlock){
+    char temp[64];
+    
+    for(int i=0; i<64 ; i++){
+        temp[i] = binBlock[table_ip[i]-1];
+    } 
+    memcpy(binBlock, temp, 64);
 }
 
 void LS(char * CiDi,int round){
@@ -462,28 +295,140 @@ void LS(char * CiDi,int round){
   }
 }
 
+//Función de permutación final.
+void permutation_inverse(char* arr){
+    char temp[64];
+    
+    for(int i=0; i<64 ; i++){
+        temp[i] = arr[table_ip_reverse[i]-1];
+    }
+    memcpy(arr, temp, 64);
+}
+
+// Funcion XOR
+char * xorBINARY(char * first, char * second, int len){
+    char * res = new char[len];
+  for(int i=0; i<len; i++){
+    res[i] = first[i] ^ second[i];
+  }
+  return res;
+}
+
+//Funcion que transforma de 32 a 48 bits para poder operar con llave.
+char* E(char* arr){
+    char * res = new char[48];
+    for(int i=0; i<48; i++){
+        res[i] = arr[table_e[i]-1];
+    }
+    return res;
+}
+
+//Función S que se encarga de convertir de 48 a 32 bits con las tablas.
+char * S(char* arr){
+    char * res = new char[32];
+    int j = 0;
+    int k = 0;
+    
+    for (int i=0; i<48; i=i+6){
+        int row = 2*arr[i] + arr[i+5];
+        int column = 8*arr[i+1] + 4*arr[i+2] + 2*arr[i+3] + arr[i+4];
+        
+        int val = table_s[j][row][column];
+        j++;
+        
+        for (int x=8; x>0; x>>= 1){
+            res[k] = ((val & x) == x) ? 1:0;
+            k++;
+        }
+    }
+    return res;
+}
+
+char * P (char* sRes){
+    char * res = new char[32];
+    
+    for (int i=0; i<32; i++){
+        res[i] = sRes[table_p[i] - 1];
+    }
+    
+    return res;
+}
+
+//Función entre R y llave K.
+char * F(char * R, char * K){
+    char * resE = E(R);
+    char * resXOR = xorBINARY(resE, K, 48);
+    char * resS = S(resXOR);
+    char * resP = P(resS);
+    
+    return resP;
+}
+
+void iterate(char * binaryBlock , char * subKey){
+
+    char L_OLD[32];
+    char R_OLD[32];    
+    
+    memcpy(L_OLD,binaryBlock,32);
+    memcpy(R_OLD,&binaryBlock[32],32);
+
+    printf("L_OLD (in binary):\n");
+     printBinary(L_OLD,32);
+     printf("\n");
+
+     printf("R_OLD (in binary):\n");
+     printBinary(R_OLD,32);
+     printf("\n");
+    
+    //Aplicar función F con Ri-1 y llave Ki
+    char * resF = F(R_OLD,subKey);
+
+    char* R_NEW = xorBINARY(L_OLD,resF,32);
+    
+    // Cambiar orden entre R y L.
+    memcpy(binaryBlock, R_OLD, 32);
+    memcpy(&binaryBlock[32], R_NEW, 32);
+}
+
+//Función que se encarga de cambiar el orden de R y L entre cada ronda Feistel.
+void swap(char * arr, int bits){
+  int halfLen = bits/2;
+  char temp[halfLen];
+  memcpy(temp, arr, halfLen);
+  memcpy(arr, &arr[halfLen], halfLen);
+  memcpy(&arr[halfLen], temp, halfLen);
+}
+
+void PC_2(char* CiDi, char* keys){
+    for(int i=0; i<48; i++){
+        keys[i] = CiDi[table_pc_2[i]-1];
+    }
+}
+
 // Función encriptación
-void encryptDES(char* plainTextBinString, char* keyHexString){
+void encryptDES(char * plainTextBinString, char * keyHexString){
     
     string binKey = HexToBin(keyHexString);
     
-    char ptbBinary[64]; //plain text block binary
-    char keyBinary[64]; //key in binary
+    char ptbBinary[64];
+    char keyBinary[64];
 
     //Copiar el bloque de bits del texto a variable ptbBinary.
-    memcpy(ptbBinary, plainTextBinString,64);
+    memcpy(ptbBinary, plainTextBinString, 64);
     
     //Pasar al arreglo de bits de la llave.
     for (int i=0; i<64; i++){
         keyBinary[i] = binKey.at(i);
     }
 
+     printf("PLAIN TEXT (in binary):\n");
+     printBinary(ptbBinary,64);
+     printf("KEY (in binary):\n");
+     printBinary(keyBinary,64);
+     printf("\n");
 
       //--------------------------------------------------------
       //Generación de subllaves.
-
-      printf("------------------------------------------------\n");
-      printf("SUBKEYS Generation Process\n\n");
 
       char subkeysBinary[16][48];
 
@@ -491,34 +436,38 @@ void encryptDES(char* plainTextBinString, char* keyHexString){
 
       PC_1(keyBinary,CiDi);
 
+          //C0D0
+      printf("C0D0\n");
+      printBinary(CiDi,56);
+      printf("\n");
+
       for(int round=1;round<=16;round++){
         printf("K%d:\n",round);
           
-        cout << "LS" << endl;
-        LS(CiDi,round);
-          
-        cout << "PC_2" << endl;
+        LS(CiDi,round);        
         PC_2(CiDi,subkeysBinary[round-1]);
+
+        printf("Binario:\n");
+    printBinary(subkeysBinary[round-1],48);
       }
     
     //----------------------------------------------------------
-    //Encriptación
-    cout << "permutación" << endl;
+    //ENCRIPTACIÓN
+
     permutation(ptbBinary);
     
     for (int round=1; round <=16; round++){
-        printf("Round %d: \n", round);
-        
-        cout << "Interate" << endl;
+        printf("RONDA %d: \n", round);
+
         iterate (ptbBinary, subkeysBinary[round-1]);
     }
     
-    cout << "swap" << endl;
     swap(ptbBinary,64);
-    
-    cout << "permutacion inversa" << endl;
     permutation_inverse(ptbBinary);
-    
+
+    string res = binArrToBinString(ptbBinary, 64);
+    cout << "Resultado en binario: \n" << res << endl; 
+    cout << "Resultado en ASCII: " << BinaryStringToText(res);    
 }
 
 int main(){
@@ -537,11 +486,10 @@ int main(){
     for (auto & c: keyHEX) c = toupper(c);
     printf("keyHEX: %s\n", keyHEX);
     
-    cout<< "keyHEX en binario: " << HexToBin(keyHEX) << endl;
-    
     //Calcular número de veces que se tendrá que usar el algoritmo dependiendo del largo del texto.
     int des_num = (plainText.length() + 8 - 1)/8;
     
+    //Llenar espacios que sean necesarios para tener bloques de 64 bits.
     while ((plainText.length()%8) != 0){
         plainText += " ";
     }
@@ -553,7 +501,7 @@ int main(){
     char plainTextBinary[des_num][64];
     char keyBinString[64];
     
-    //Obtener cada char en un string.
+    //Guardar caracteres de string en bloques de 64.
     for (int i = 0; i < des_num; i++){
         for (int j =0; j<64; j++){
             plainTextBinary[i][j] = binary.at(64*i + j);
@@ -562,13 +510,8 @@ int main(){
     
     // Texto encriptado 
     for (int i=0; i<des_num; i++){
-        //encryptDES(plainTextBinary[i]);
-        char block [64];
         
-        for (int j=0; j<64; j++){
-            block[j] = plainTextBinary[i][j];
-        }
-        encryptDES(block, keyHEX);
+        encryptDES(plainTextBinary[i], keyHEX);
         
     }
     
